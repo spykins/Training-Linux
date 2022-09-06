@@ -1,0 +1,22 @@
+# -*- mode: ruby -*- 
+# vi: set ft=ruby :
+file_to_disk = 'tmp/source_code_disk.vdi'
+
+Vagrant.configure("2") do |config|
+    config.vm.box = "ubuntu/trusty32"
+    config.vm.network "private_network", ip: "192.168.33.11" 
+    config.vm.hostname = "testdisk" 
+    config.ssh.forward_agent = true
+    config.ssh.shell = "/bin/bash -l"
+    config.vm.provision :shell do |shell|
+        shell.inline = "sudo chsh -s /bin/bash vagrant"
+    end
+    # create a disk for the source code 
+    config.vm.provider "virtualbox" do | v |
+        unless File.exist?(file_to_disk)
+            v.customize ['createhd', '--filename', file_to_disk, '--size', 50 * 1024]
+            v.customize ['storageattach', :id, '--storagectl', 'SATAController', '--port', 1, '--device',
+            0, '--type', 'hdd', '--medium', file_to_disk] 
+        end
+    end
+end
